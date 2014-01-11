@@ -313,7 +313,26 @@ sub ArticleWriteAttachment {
         }
     }
 
-    $Param{Filename} = $NewFileName;
+    # check filename encode type
+    my $FilenameEncode;
+    if ( $Param{FilenameEncode} ) {
+        $FilenameEncode = $Param{FilenameEncode};
+    }
+    elsif ( $Self->{ConfigObject}->Get('ArticleFilenameEncode') ) {
+        $FilenameEncode = $Self->{ConfigObject}->Get('ArticleFilenameEncode');
+    }
+    else {
+        $FilenameEncode = 'plain';
+    }
+
+    # encode filename if needed
+    if ( $FilenameEncode eq 'base64url' ) {
+        $Self->{EncodeObject}->EncodeOutput( \$NewFileName );
+        $Param{Filename} = MIME::Base64::encode_base64url( $NewFileName );
+    }
+    else {
+        $Param{Filename} = $NewFileName;
+    }
 
     # write attachment to backend
     if ( !-d $Param{Path} ) {
@@ -362,6 +381,15 @@ sub ArticleWriteAttachment {
             Permission => 660,
         );
     }
+
+    # write filename encode to fs
+    $Self->{MainObject}->FileWrite(
+        Directory  => $Param{Path},
+        Filename   => "$Param{Filename}.filename_encode",
+        Mode       => 'binmode',
+        Content    => \$FilenameEncode,
+        Permission => 660,
+    );
 
     # write attachment content to fs
     my $SuccessContent = $Self->{MainObject}->FileWrite(
@@ -465,6 +493,7 @@ sub ArticleAttachmentIndexRaw {
         next FILENAME if $Filename =~ /\.content_alternative$/;
         next FILENAME if $Filename =~ /\.content_id$/;
         next FILENAME if $Filename =~ /\.content_type$/;
+        next FILENAME if $Filename =~ /\.filename_encode$/;
         next FILENAME if $Filename =~ /\/plain.txt$/;
 
         # human readable file size
@@ -526,6 +555,23 @@ sub ArticleAttachmentIndexRaw {
 
         # strip filename
         $Filename =~ s!^.*/!!;
+
+        # read filename encode type
+        my $FilenameEncode = 'plain';
+        if ( -e "$Filename.filename_enctype" ) {
+            my $Content = $Self->{MainObject}->FileRead(
+                Location => "$Filename.filename_encode",
+            );
+            if ($Content) {
+                $FilenameEncode = ${$Content};
+            }
+        }
+
+        # decode filename if encoded with base64url
+        if ( $FilenameEncode eq 'base64url' ) {
+            $Filename = MIME::Base64::decode_base64url( $Filename );
+            $Self->{EncodeObject}->EncodeInput( \$Filename );
+        }
 
         # add the info the the hash
         $Counter++;

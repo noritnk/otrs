@@ -265,6 +265,17 @@
             <String Regex="">&lt;OTRS_CONFIG_Home&gt;/var/article</String>
         </Setting>
     </ConfigItem>
+    <ConfigItem Name="ArticleFilenameEncode" Required="1" Valid="1" ConfigLevel="200">
+        <Description Translatable="1">Specifies the encode type of the filename to store the data in, if "FS" was selected for TicketStorageModule.</Description>
+        <Group>Ticket</Group>
+        <SubGroup>Core::Ticket</SubGroup>
+        <Setting>
+            <Option SelectedID="base64url">
+                <Item Key="plain">plain</Item>
+                <Item Key="base64url">base64url</Item>
+            </Option>
+        </Setting>
+    </ConfigItem>
     <ConfigItem Name="Ticket::EventModulePost###100-ArchiveRestore" Required="0" Valid="1">
         <Description Translatable="1">Restores a ticket from the archive (only if the event is a state change, from closed to any open available state).</Description>
         <Group>Ticket</Group>

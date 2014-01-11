@@ -435,6 +435,7 @@ sub ArticleAttachmentIndexRaw {
         next FILENAME if $Filename =~ /\.content_alternative$/;
         next FILENAME if $Filename =~ /\.content_id$/;
         next FILENAME if $Filename =~ /\.content_type$/;
+        next FILENAME if $Filename =~ /\.filename_encode$/;
         next FILENAME if $Filename =~ /\/plain.txt$/;
 
         # human readable file size
@@ -494,6 +495,23 @@ sub ArticleAttachmentIndexRaw {
 
         # strip filename
         $Filename =~ s!^.*/!!;
+
+        # read filename encode type
+        my $FilenameEncode = 'plain';
+        if ( -e "$Filename.filename_encode" ) {
+            my $Content = $Self->{MainObject}->FileRead(
+                Location => "$Filename.filename_encode",
+            );
+            if ($Content) {
+                $FilenameEncode = ${$Content};
+            }
+        }
+
+        # decode filename if encoded with base64url
+        if ( $FilenameEncode eq 'base64url' ) {
+            $Filename = MIME::Base64::decode_base64url( $Filename );
+            $Self->{EncodeObject}->EncodeInput( \$Filename );
+        }
 
         # add the info the the hash
         $Counter++;
