@@ -112,25 +112,15 @@ sub Run {
     }
 
     # get customer user data form From: (sender address)
-    if ( !$GetParam{'X-OTRS-CustomerUser'} ) {
+    if ( !$GetParam{'X-OTRS-CustomerUser'} && $GetParam{From} ) {
         my %CustomerData;
-        if ( $GetParam{From} ) {
-            my @EmailAddresses = $Self->{ParserObject}->SplitAddressLine(
-                Line => $GetParam{From},
+        my %List = $Self->{CustomerUserObject}->CustomerSearch(
+            PostMasterSearch => lc( $GetParam{SenderEmailAddress} ),
+        );
+        for my $UserLogin ( sort keys %List ) {
+            %CustomerData = $Self->{CustomerUserObject}->CustomerUserDataGet(
+                User => $UserLogin,
             );
-            for my $Address (@EmailAddresses) {
-                $GetParam{EmailFrom} = $Self->{ParserObject}->GetEmailAddress(
-                    Email => $Address,
-                );
-            }
-            my %List = $Self->{CustomerUserObject}->CustomerSearch(
-                PostMasterSearch => lc( $GetParam{EmailFrom} ),
-            );
-            for my $UserLogin ( sort keys %List ) {
-                %CustomerData = $Self->{CustomerUserObject}->CustomerUserDataGet(
-                    User => $UserLogin,
-                );
-            }
         }
 
         # take CustomerID from customer backend lookup or from from field
