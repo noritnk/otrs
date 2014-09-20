@@ -752,11 +752,21 @@ sub _ShowEdit {
 
     # get list of all possible actions
     my @PossibleActionsList;
-    my $ACLKeysLevel3Actions
-        = $Self->{ConfigObject}->Get('ACLKeysLevel3::Actions') || [];
+    my $ACLKeysLevel3Actions;
 
+    $ACLKeysLevel3Actions = $Self->{ConfigObject}->Get('Frontend::Modules') || {};
     for my $Key ( sort keys %{$ACLKeysLevel3Actions} ) {
-        push @PossibleActionsList, @{ $ACLKeysLevel3Actions->{$Key} };
+        push @PossibleActionsList, $Key;
+    }
+
+    $ACLKeysLevel3Actions = $Self->{ConfigObject}->Get('CustomerFrontend::Modules') || {};
+    for my $Key ( sort keys %{$ACLKeysLevel3Actions} ) {
+        push @PossibleActionsList, $Key;
+    }
+
+    $ACLKeysLevel3Actions = $Self->{ConfigObject}->Get('PublicFrontend::Modules') || {};
+    for my $Key ( sort keys %{$ACLKeysLevel3Actions} ) {
+        push @PossibleActionsList, $Key;
     }
 
     $Param{ACLKeysLevel3Actions} = $Self->{LayoutObject}->BuildSelection(
