@@ -32,12 +32,22 @@ sub new {
     $Self->{LogFile} = $ConfigObject->Get('LogModule::LogFile')
         || die 'Need LogModule::LogFile param in Config.pm';
 
+    my %TempENV;
+    if ( exists( $ENV{TZ} ) ) {
+        $TempENV[TZ] = $ENV{TZ};
+        delete $ENV{TZ};
+    }
+
     # get log file suffix
     if ( $ConfigObject->Get('LogModule::LogFile::Date') ) {
         my ( $s, $m, $h, $D, $M, $Y, $WD, $YD, $DST ) = localtime( time() );    ## no critic
         $Y = $Y + 1900;
         $M++;
         $Self->{LogFile} .= ".$Y-$M";
+    }
+
+    if ( exists( $TempENV{TZ} ) ) {
+        $ENV{TZ} = $TempENV{TZ};
     }
 
     # Fixed bug# 2265 - For IIS we need to create a own error log file.

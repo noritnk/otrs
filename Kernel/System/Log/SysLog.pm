@@ -52,6 +52,12 @@ sub Log {
         );
     }
 
+    my %TempENV;
+    if ( exists( $ENV{TZ} ) ) {
+        $TempENV[TZ] = $ENV{TZ};
+        delete $ENV{TZ};
+    }
+
     # According to the docs, this is not needed any longer and should not be used any more.
     #   Please see the Sys::Syslog documentation for details.
     #   #TODO: remove this code sometime, and the config setting.
@@ -85,6 +91,10 @@ sub Log {
     }
 
     Sys::Syslog::closelog();
+
+    if ( exists( $TempENV{TZ} ) ) {
+        $ENV{TZ} = $TempENV{TZ};
+    }
 
     return;
 }
